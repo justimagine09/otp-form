@@ -1,0 +1,17 @@
+<div class="otp-form">
+    <h3 class="otp-form--header">OTP Verification</h3>
+    <p>A {{_inputCount.controls.length}} code has been sent to {{sentTo}}</p>
+    <div class="otp-form--inputs">
+        <input
+        #input
+        *ngFor="let input of _inputCount.controls; let i=index"
+        [style.width.px]="width"
+        [style.height.px]="height"
+        [disabled]="disabled"
+        [formControl]="$any(input)"
+        (input)="onInput(i, input, $event)"
+        (keydown)="onKeydown(i, input, $event)"
+        class="otp-form--inputs-item" autocomplete="false" />
+    </div>
+    <p class="otp-form--resend">Didn`t receive the code? <a (click)="resend()">RESEND</a></p>
+</div>

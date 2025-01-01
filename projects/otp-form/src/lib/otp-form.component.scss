@@ -1,0 +1,30 @@
+.otp-form {
+    width: fit-content;
+    
+    &--header {
+        text-align: center;
+    }
+
+    &--inputs {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+
+        &-item {
+            font-size: 1.2em;
+            text-align: center;
+        }
+    }
+
+    &--resend {
+        a {
+            color: rgb(65, 166, 255);
+            text-decoration: none;
+            cursor: pointer;
+
+            &:active {
+                color: rgb(0, 136, 255);
+            }
+        }
+    }
+}
