@@ -5,25 +5,34 @@
         text-align: center;
     }
 
+    &--expiration {
+        text-align: center;
+        color: rgb(245, 69, 0);
+        font-size: 1.5em;
+    }
+
     &--inputs {
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
+        justify-content: center;
+        gap: 18px;
 
         &-item {
             font-size: 1.2em;
             text-align: center;
+            border-radius: 8px;
         }
     }
 
     &--resend {
-        a {
-            color: rgb(65, 166, 255);
+        text-align: center;
+
+        a, span {
+            color: rgb(0, 140, 255);
             text-decoration: none;
             cursor: pointer;
 
             &:active {
-                color: rgb(0, 136, 255);
+                color: rgb(0, 112, 163);
             }
         }
     }

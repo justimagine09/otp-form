@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, OnDestroy, Output, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
 import { FormArray, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, map, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, interval, map, Subscription, takeWhile } from 'rxjs';
 
 const DEFAULT_INPUT_COUNT: number = 4;
 
@@ -12,24 +12,38 @@ const DEFAULT_INPUT_COUNT: number = 4;
   templateUrl: './otp-form.component.html',
   styles: ``
 })
-export class OtpFormComponent implements OnDestroy {
+export class OtpFormComponent implements OnChanges, OnDestroy {
   @ViewChildren('input') inputElement!: QueryList<ElementRef<HTMLInputElement>>;
-  @Input() sentTo = 'your@email.com';
+
+  @Output() onChanged = new EventEmitter();
+  @Output() resendCode = new EventEmitter();
+
+  @Input() title = 'OTP Verification';
+  @Input() description = null;
+  @Input() sentTo = 'youremail@gmail.com';
   @Input() emitWhenValidityChanged = true;
   @Input() disabled = false;
+  @Input() expirationTime = 120; // seconds
   @Input() width = 40;
   @Input() height = 40;
+  @Input() resendTimer = 10;
+  @Input() maxResendReached = false;
+
   @Input() set inputCount(count: number) {
     this.initializeForm(count);
   }
-  @Output() onChanged = new EventEmitter();
+
   _inputCount: FormArray<any> = new FormArray<any>([]);
+  _currentTimer = 0;
+  _timerSubscription?: Subscription;
+  _expirationTimeSubscription?: Subscription;
   listenerSubscription?: Subscription;
   
   private isValid = false;
 
   constructor() {
     this.initializeForm(DEFAULT_INPUT_COUNT);
+    this.watchExpirationTime();
   }
 
   initializeForm(count: number) {
@@ -42,8 +56,16 @@ export class OtpFormComponent implements OnDestroy {
     this.listenToChanges();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if(changes['expirationTime']) {
+      this.watchExpirationTime();
+    }
+  }
+
   ngOnDestroy(): void {
     this.listenerSubscription?.unsubscribe();
+    this._timerSubscription?.unsubscribe();
+    this._expirationTimeSubscription?.unsubscribe();
   }
 
   listenToChanges() {
@@ -84,6 +106,45 @@ export class OtpFormComponent implements OnDestroy {
   }
 
   resend() {
-    
+    if (this._currentTimer > 0) return;
+
+    this._currentTimer = this.resendTimer;
+    this._timerSubscription?.unsubscribe();
+    this.resendCode.emit();
+    this._timerSubscription = interval(1000)
+    .pipe(takeWhile(() => this._currentTimer > 0))
+      .subscribe(() => {
+        this._currentTimer--;
+      });
+  }
+
+  watchExpirationTime() {
+    this._expirationTimeSubscription?.unsubscribe();
+
+    this._expirationTimeSubscription = interval(1000)
+    .pipe(takeWhile(() => this.expirationTime > 0))
+      .subscribe(() => {
+        this.expirationTime--;
+      });
+  }
+
+  formattedExpirationTime() {
+
+    if (this.expirationTime > 60) {
+      let minutes: any = Math.trunc(this.expirationTime / 60);
+      let seconds: any = this.expirationTime % 60;
+      
+      if(minutes < 10) {
+        minutes = `0${minutes}`;
+      }
+
+      if(seconds < 10) {
+        seconds = `0${seconds}`;
+      }
+
+      return `${minutes}:${seconds}s`;
+    }
+
+    return `${this.expirationTime}s`;
   }
 }
